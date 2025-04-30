@@ -1,0 +1,52 @@
+/* darktheme.css */
+.root {
+    -fx-background-color: #2D2D2D;
+    -fx-font-family: "System";
+}
+
+.dialog-pane {
+    -fx-background-color: #2D2D2D;
+}
+
+.dialog-pane > .content.label {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 12px;
+}
+
+.dialog-pane:header .header-panel {
+    -fx-background-color: #3D3D3D;
+}
+
+.dialog-pane:header .header-panel .label {
+    -fx-text-fill: #FFFFFF;
+}
+
+.button {
+    -fx-background-color: #4285F4;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 3;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16;
+}
+
+.button:hover {
+    -fx-background-color: derive(#4285F4, 20%);
+    -fx-cursor: hand;
+}
+
+.text-field, .password-field, .text-area {
+    -fx-background-color: #3D3D3D;
+    -fx-text-fill: #FFFFFF;
+    -fx-prompt-text-fill: derive(#FFFFFF, -30%);
+    -fx-highlight-fill: #4285F4;
+    -fx-background-radius: 3;
+    -fx-padding: 8;
+}
+
+.label {
+    -fx-text-fill: #FFFFFF;
+}
+
+.alert {
+    -fx-background-color: #2D2D2D;
+}
