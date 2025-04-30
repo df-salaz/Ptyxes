@@ -43,7 +43,7 @@ public class MainPage {
         root.setTop(topBar);
         
         // Create sidebar for filtering and options
-        VBox sidebar = createSidebar();
+        VBox sidebar = createSidebar(primaryStage);
         root.setLeft(sidebar);
         
         // Create main content area for meal posts
@@ -131,7 +131,7 @@ public class MainPage {
         return topBar;
     }
     
-    private VBox createSidebar() {
+    private VBox createSidebar(Stage primaryStage) {
         VBox sidebar = new VBox(15);
         sidebar.setPadding(new Insets(20));
         sidebar.setPrefWidth(200);
@@ -200,6 +200,11 @@ public class MainPage {
         Button newPostButton = new Button("Create New Post");
         newPostButton.setStyle(DarkTheme.CSS_BUTTON);
         newPostButton.setMaxWidth(Double.MAX_VALUE);
+
+        newPostButton.setOnAction(e -> {
+            CreatePostPage createPostPage = new CreatePostPage(databaseHelper, currentUser);
+            createPostPage.show(primaryStage);
+        });
         
         // Add hover effect
         newPostButton.setOnMouseEntered(e -> newPostButton.setStyle(DarkTheme.CSS_BUTTON + DarkTheme.CSS_BUTTON_HOVER));
