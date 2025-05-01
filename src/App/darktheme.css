@@ -51,21 +51,6 @@
     -fx-background-color: transparent;
 }
 
-.text-area .scroll-bar:vertical,
-.text-area .scroll-bar:horizontal {
-    -fx-background-color: #3D3D3D;
-}
-
-.text-area .scroll-bar:vertical .thumb,
-.text-area .scroll-bar:horizontal .thumb {
-    -fx-background-color: #4D4D4D;
-}
-
-.text-area .scroll-bar:vertical .thumb:hover,
-.text-area .scroll-bar:horizontal .thumb:hover {
-    -fx-background-color: #5D5D5D;
-}
-
 .combo-box {
     -fx-background-color: #3D3D3D;
     -fx-text-fill: #FFFFFF;
@@ -127,6 +112,78 @@
 
 .menu-item:disabled .label {
     -fx-text-fill: #808080;
+}
+
+/* Spinner Styling */
+
+.spinner {
+    -fx-background-color: #3D3D3D;
+    -fx-background-radius: 3;
+}
+
+.spinner .text-field {
+    -fx-background-color: #3D3D3D;
+    -fx-text-fill: #FFFFFF;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: #4D4D4D;
+}
+
+.spinner .increment-arrow-button:hover,
+.spinner .decrement-arrow-button:hover {
+    -fx-background-color: #5D5D5D;
+}
+
+.spinner .increment-arrow-button .increment-arrow,
+.spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #FFFFFF;
+}
+
+/* Scrollbar Styling */
+
+.scroll-bar {
+    -fx-background-color: #3D3D3D;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track {
+    -fx-background-color: #3D3D3D;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar:vertical .thumb,
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: #4D4D4D;
+    -fx-background-radius: 3;
+}
+
+.scroll-bar:vertical .thumb:hover,
+.scroll-bar:horizontal .thumb:hover {
+    -fx-background-color: #5D5D5D;
+}
+
+.scroll-bar:vertical .thumb:pressed,
+.scroll-bar:horizontal .thumb:pressed {
+    -fx-background-color: #4285F4;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: #3D3D3D;
+    -fx-background-radius: 0;
+    -fx-padding: 4;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: #FFFFFF;
+}
+
+.scroll-pane > .corner {
+    -fx-background-color: #3D3D3D;
 }
 
 .separator {
