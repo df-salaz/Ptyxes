@@ -34,13 +34,103 @@
     -fx-cursor: hand;
 }
 
-.text-field, .password-field, .text-area {
+.text-field, .password-field, .text-area .content {
     -fx-background-color: #3D3D3D;
     -fx-text-fill: #FFFFFF;
     -fx-prompt-text-fill: derive(#FFFFFF, -30%);
     -fx-highlight-fill: #4285F4;
     -fx-background-radius: 3;
     -fx-padding: 8;
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-bar:vertical,
+.text-area .scroll-bar:horizontal {
+    -fx-background-color: #3D3D3D;
+}
+
+.text-area .scroll-bar:vertical .thumb,
+.text-area .scroll-bar:horizontal .thumb {
+    -fx-background-color: #4D4D4D;
+}
+
+.text-area .scroll-bar:vertical .thumb:hover,
+.text-area .scroll-bar:horizontal .thumb:hover {
+    -fx-background-color: #5D5D5D;
+}
+
+.combo-box {
+    -fx-background-color: #3D3D3D;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 3;
+}
+
+.combo-box .cell {
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #3D3D3D;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #3D3D3D;
+    -fx-border-color: #4D4D4D;
+}
+
+.combo-box-popup .list-cell {
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #3D3D3D;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #4285F4;
+}
+
+.combo-box-popup .list-cell:selected {
+    -fx-background-color: #4285F4;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: #3D3D3D;
+}
+
+.combo-box .arrow {
+    -fx-background-color: #FFFFFF;
+}
+
+.context-menu {
+    -fx-background-color: #3D3D3D;
+    -fx-border-color: #4D4D4D;
+    -fx-border-width: 1px;
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+}
+
+.menu-item .label {
+    -fx-text-fill: #FFFFFF;
+}
+
+.menu-item:focused, .menu-item:hover {
+    -fx-background-color: #4285F4;
+}
+
+.menu-item:focused .label, .menu-item:hover .label {
+    -fx-text-fill: #FFFFFF;
+}
+
+.menu-item:disabled .label {
+    -fx-text-fill: #808080;
+}
+
+.separator {
+    -fx-background-color: #4D4D4D;
 }
 
 .label {
