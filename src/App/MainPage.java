@@ -384,12 +384,16 @@ public class MainPage {
         nextButton.setOnMouseEntered(e -> nextButton.setStyle(DarkTheme.CSS_BUTTON + DarkTheme.CSS_BUTTON_HOVER));
         nextButton.setOnMouseExited(e -> nextButton.setStyle(DarkTheme.CSS_BUTTON));
 
+        // Update button states based on available content
+        updatePaginationButtons(prevButton, nextButton);
+
         // Add pagination functionality
         prevButton.setOnAction(e -> {
             if (currentPage > 0) {
                 currentPage--;
                 pageText.setText("Page " + (currentPage + 1));
                 loadMealPosts(postsContainer);
+                updatePaginationButtons(prevButton, nextButton); // Update buttons after page change
             }
         });
 
@@ -397,15 +401,26 @@ public class MainPage {
             currentPage++;
             pageText.setText("Page " + (currentPage + 1));
             loadMealPosts(postsContainer);
+            updatePaginationButtons(prevButton, nextButton); // Update buttons after page change
         });
-
-        // Disable previous button on first page
-        prevButton.setDisable(currentPage == 0);
 
         paginationBar.getChildren().addAll(prevButton, pageText, nextButton);
 
         return paginationBar;
     }
+
+    private void updatePaginationButtons(Button prevButton, Button nextButton) {
+        try {
+            int totalPosts = databaseHelper.getTotalPostsCount();
+            int totalPages = (int) Math.ceil((double) totalPosts / PAGE_SIZE);
+
+            prevButton.setDisable(currentPage == 0);
+            nextButton.setDisable(currentPage >= totalPages - 1);
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not update pagination buttons: " + e.getMessage());
+        }
+    }
+
 
     private void showAlert(Alert.AlertType alertType, String title, String message) {
         Alert alert = new Alert(alertType);

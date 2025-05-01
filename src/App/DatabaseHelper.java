@@ -692,6 +692,22 @@ public class DatabaseHelper {
     }
 
     /**
+     * Gets the total number of meal posts
+     *
+     * @return Number of MealPosts
+     */
+    public int getTotalPostsCount() throws SQLException {
+        String query = "SELECT COUNT(*) FROM meal_posts";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
+        }
+    }
+
+    /**
      * Gets meal posts by a specific user
      * 
      * @param userId The user ID
