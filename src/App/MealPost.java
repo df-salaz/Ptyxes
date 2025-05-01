@@ -1,5 +1,6 @@
 package App;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -52,7 +53,25 @@ public class MealPost {
         this.lastModified = lastModified;
         this.ingredients = new ArrayList<>();
     }
-    
+
+    public static MealPost fromResultSet(ResultSet rs) throws SQLException {
+        return new MealPost(
+                rs.getInt("id"),
+                rs.getString("title"),
+                rs.getInt("userId"),
+                rs.getString("description"),
+                rs.getString("instructions"),
+                rs.getInt("preparationTime"),
+                rs.getInt("cookingTime"),
+                rs.getInt("servings"),
+                rs.getString("difficulty"),
+                rs.getString("imageUrl"),
+                rs.getInt("upvotes"),
+                rs.getTimestamp("creationDate") != null ? rs.getTimestamp("creationDate").toLocalDateTime() : null,
+                rs.getTimestamp("lastModified") != null ? rs.getTimestamp("lastModified").toLocalDateTime() : null
+        );
+    }
+
     // Getters and Setters
     public int getId() {
         return id;

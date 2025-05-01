@@ -4,6 +4,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -25,12 +26,19 @@ public class MainPage {
     private static final String APP_TITLE = "Ptyxes - Meal Posts";
     private int currentPage = 0;
     private static final int PAGE_SIZE = 5;
+    private String currentSearchQuery = "";
+    private String currentDifficulty = "All";
+    private String currentTimeFilter = "All";
+    private VBox postsContainer;
+    private Text pageText;
+    private Button prevButton;
+    private Button nextButton;
     
     public MainPage(DatabaseHelper databaseHelper, User currentUser) {
         this.databaseHelper = databaseHelper;
         this.currentUser = currentUser;
     }
-    
+
     public void show(Stage primaryStage) {
         primaryStage.setTitle(APP_TITLE);
         
@@ -51,10 +59,10 @@ public class MainPage {
         contentArea.setFitToWidth(true);
         contentArea.setStyle("-fx-background: " + DarkTheme.BACKGROUND_COLOR + "; -fx-border-color: " + DarkTheme.BACKGROUND_COLOR + ";");
         
-        // Load initial meal posts
-        VBox postsContainer = new VBox(15);
-        postsContainer.setPadding(new Insets(20));
-        loadMealPosts(postsContainer);
+        // Store reference to postsContainer
+        this.postsContainer = new VBox(15);
+        this.postsContainer.setPadding(new Insets(20));
+        loadMealPosts();
         
         contentArea.setContent(postsContainer);
         root.setCenter(contentArea);
@@ -93,6 +101,24 @@ public class MainPage {
         
         Button searchButton = new Button("Search");
         searchButton.setStyle(DarkTheme.CSS_BUTTON);
+        
+        // Search functionality
+        searchButton.setOnAction(e -> {
+            currentSearchQuery = searchField.getText().trim();
+            currentPage = 0;
+            loadMealPosts();
+            updatePaginationButtons();
+        });
+        
+        // Search on Enter key
+        searchField.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                currentSearchQuery = searchField.getText().trim();
+                currentPage = 0;
+                loadMealPosts();
+                updatePaginationButtons();
+            }
+        });
         
         // Add hover effect
         searchButton.setOnMouseEntered(e -> searchButton.setStyle(DarkTheme.CSS_BUTTON + DarkTheme.CSS_BUTTON_HOVER));
@@ -165,6 +191,17 @@ public class MainPage {
         allOption.setToggleGroup(difficultyGroup);
         allOption.setSelected(true);
         
+        // Add filter change listeners
+        difficultyGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                RadioButton selected = (RadioButton) newValue;
+                currentDifficulty = selected.getText();
+                currentPage = 0;
+                loadMealPosts();
+                updatePaginationButtons();
+            }
+        });
+        
         difficultyFilter.getChildren().addAll(difficultyLabel, easyOption, mediumOption, hardOption, allOption);
         
         // Time filter
@@ -191,6 +228,16 @@ public class MainPage {
         allTimes.setToggleGroup(timeGroup);
         allTimes.setSelected(true);
         
+        timeGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                RadioButton selected = (RadioButton) newValue;
+                currentTimeFilter = selected.getText().split(" ")[0]; // Get just the first word (Quick, Medium, Long, All)
+                currentPage = 0;
+                loadMealPosts();
+                updatePaginationButtons();
+            }
+        });
+        
         timeFilter.getChildren().addAll(timeLabel, quick, medium, long_, allTimes);
         
         // Buttons for user actions
@@ -200,7 +247,7 @@ public class MainPage {
         Button newPostButton = new Button("Create New Post");
         newPostButton.setStyle(DarkTheme.CSS_BUTTON);
         newPostButton.setMaxWidth(Double.MAX_VALUE);
-
+        
         newPostButton.setOnAction(e -> {
             CreatePostPage createPostPage = new CreatePostPage(databaseHelper, currentUser);
             createPostPage.show(primaryStage);
@@ -360,68 +407,55 @@ public class MainPage {
         
         return postCard;
     }
-
+    
     private HBox createPaginationBar(VBox postsContainer) {
         HBox paginationBar = new HBox(10);
         paginationBar.setAlignment(Pos.CENTER);
         paginationBar.setPadding(new Insets(15));
         paginationBar.setStyle("-fx-background-color: " + DarkTheme.SECONDARY_COLOR + ";");
-
-        Button prevButton = new Button("Previous");
+        
+        prevButton = new Button("Previous");
         prevButton.setStyle(DarkTheme.CSS_BUTTON);
-
+        
         // Add hover effect
         prevButton.setOnMouseEntered(e -> prevButton.setStyle(DarkTheme.CSS_BUTTON + DarkTheme.CSS_BUTTON_HOVER));
         prevButton.setOnMouseExited(e -> prevButton.setStyle(DarkTheme.CSS_BUTTON));
-
-        Text pageText = new Text("Page " + (currentPage + 1));
+        
+        pageText = new Text("Page " + (currentPage + 1));
         pageText.setFill(Color.web(DarkTheme.TEXT_COLOR));
 
-        Button nextButton = new Button("Next");
+        nextButton = new Button("Next");
         nextButton.setStyle(DarkTheme.CSS_BUTTON);
-
+        
         // Add hover effect
         nextButton.setOnMouseEntered(e -> nextButton.setStyle(DarkTheme.CSS_BUTTON + DarkTheme.CSS_BUTTON_HOVER));
         nextButton.setOnMouseExited(e -> nextButton.setStyle(DarkTheme.CSS_BUTTON));
-
+        
         // Update button states based on available content
-        updatePaginationButtons(prevButton, nextButton);
-
+        updatePaginationButtons();
+        
         // Add pagination functionality
         prevButton.setOnAction(e -> {
             if (currentPage > 0) {
                 currentPage--;
                 pageText.setText("Page " + (currentPage + 1));
                 loadMealPosts(postsContainer);
-                updatePaginationButtons(prevButton, nextButton); // Update buttons after page change
+                updatePaginationButtons(); // Update buttons after page change
             }
         });
-
+        
         nextButton.setOnAction(e -> {
             currentPage++;
             pageText.setText("Page " + (currentPage + 1));
             loadMealPosts(postsContainer);
-            updatePaginationButtons(prevButton, nextButton); // Update buttons after page change
+            updatePaginationButtons(); // Update buttons after page change
         });
-
+        
         paginationBar.getChildren().addAll(prevButton, pageText, nextButton);
-
+        
         return paginationBar;
     }
-
-    private void updatePaginationButtons(Button prevButton, Button nextButton) {
-        try {
-            int totalPosts = databaseHelper.getTotalPostsCount();
-            int totalPages = (int) Math.ceil((double) totalPosts / PAGE_SIZE);
-
-            prevButton.setDisable(currentPage == 0);
-            nextButton.setDisable(currentPage >= totalPages - 1);
-        } catch (SQLException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Could not update pagination buttons: " + e.getMessage());
-        }
-    }
-
-
+    
     private void showAlert(Alert.AlertType alertType, String title, String message) {
         Alert alert = new Alert(alertType);
         alert.setTitle(title);
@@ -432,5 +466,49 @@ public class MainPage {
         DarkTheme.styleDialog(alert);
         
         alert.showAndWait();
+    }
+
+    private void loadMealPosts() {
+        postsContainer.getChildren().clear();
+        
+        try {
+            List<MealPost> posts = databaseHelper.searchAndFilterMealPosts(
+                currentSearchQuery,
+                currentDifficulty,
+                currentTimeFilter,
+                currentPage,
+                PAGE_SIZE
+            );
+            
+            if (posts.isEmpty()) {
+                Text noPostsText = new Text("No meal posts found.");
+                noPostsText.setFill(Color.web(DarkTheme.TEXT_COLOR));
+                postsContainer.getChildren().add(noPostsText);
+                return;
+            }
+            
+            for (MealPost post : posts) {
+                VBox postCard = createPostCard(post);
+                postsContainer.getChildren().add(postCard);
+            }
+            
+        } catch (SQLException e) {
+            Text errorText = new Text("Error loading posts: " + e.getMessage());
+            errorText.setFill(Color.web(DarkTheme.ERROR_COLOR));
+            postsContainer.getChildren().add(errorText);
+        }
+    }
+
+    private void updatePaginationButtons() {
+        try {
+            int totalPosts = databaseHelper.getFilteredPostsCount(currentSearchQuery, currentDifficulty, currentTimeFilter);
+            int totalPages = (int) Math.ceil((double) totalPosts / PAGE_SIZE);
+
+            prevButton.setDisable(currentPage == 0);
+            nextButton.setDisable(currentPage >= totalPages - 1);
+            pageText.setText("Page " + (currentPage + 1));
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not update pagination buttons: " + e.getMessage());
+        }
     }
 }

@@ -797,6 +797,118 @@ public class DatabaseHelper {
     }
 
     /**
+     * Searches and filters meal posts based on provided criteria such as search query, difficulty level, time filters, and pagination settings.
+     *
+     * @param searchQuery The search text to filter meal posts by title or description (case-insensitive).
+     * @param difficulty The difficulty level to filter meal posts (e.g., "Easy", "Medium", "Hard"). Use "All" to ignore this filter.
+     * @param timeFilter The time category for filtering based on total preparation and cooking time ("Quick", "Medium", "Long"). Use "All" to ignore this filter.
+     * @param page The page number for paginated results (0-based).
+     * @param pageSize The number of meal posts per page.
+     * @return A list of filtered and paginated MealPost objects matching the criteria.
+     */
+    public List<MealPost> searchAndFilterMealPosts(String searchQuery, String difficulty, String timeFilter, int page, int pageSize) throws SQLException {
+        StringBuilder queryBuilder = new StringBuilder("SELECT * FROM meal_posts WHERE 1=1");
+        List<Object> parameters = new ArrayList<>();
+
+        // Add search condition if search query is provided
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            queryBuilder.append(" AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ?)");
+            String searchPattern = "%" + searchQuery.toLowerCase() + "%";
+            parameters.add(searchPattern);
+            parameters.add(searchPattern);
+        }
+
+        // Add difficulty filter
+        if (difficulty != null && !difficulty.equals("All")) {
+            queryBuilder.append(" AND difficulty = ?");
+            parameters.add(difficulty);
+        }
+
+        // Add time filter
+        if (timeFilter != null && !timeFilter.equals("All")) {
+            int totalTime;
+            switch (timeFilter) {
+                case "Quick":
+                    queryBuilder.append(" AND (preparationTime + cookingTime) < 30");
+                    break;
+                case "Medium":
+                    queryBuilder.append(" AND (preparationTime + cookingTime) BETWEEN 30 AND 60");
+                    break;
+                case "Long":
+                    queryBuilder.append(" AND (preparationTime + cookingTime) > 60");
+                    break;
+            }
+        }
+
+        // Add pagination
+        queryBuilder.append(" ORDER BY creationDate DESC LIMIT ? OFFSET ?");
+        parameters.add(pageSize);
+        parameters.add(page * pageSize);
+
+        try (PreparedStatement stmt = connection.prepareStatement(queryBuilder.toString())) {
+            // Set parameters
+            for (int i = 0; i < parameters.size(); i++) {
+                stmt.setObject(i + 1, parameters.get(i));
+            }
+
+            ResultSet rs = stmt.executeQuery();
+            List<MealPost> posts = new ArrayList<>();
+            while (rs.next()) {
+                posts.add(MealPost.fromResultSet(rs));
+            }
+            return posts;
+        }
+    }
+
+    public int getFilteredPostsCount(String searchQuery, String difficulty, String timeFilter) throws SQLException {
+        StringBuilder queryBuilder = new StringBuilder("SELECT COUNT(*) FROM meal_posts WHERE 1=1");
+        List<Object> parameters = new ArrayList<>();
+
+        // Add search condition if a search query is provided
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            queryBuilder.append(" AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ?)");
+            String searchPattern = "%" + searchQuery.toLowerCase() + "%";
+            parameters.add(searchPattern);
+            parameters.add(searchPattern);
+        }
+
+        // Add difficulty filter
+        if (difficulty != null && !difficulty.equals("All")) {
+            queryBuilder.append(" AND difficulty = ?");
+            parameters.add(difficulty);
+        }
+
+        // Add time filter
+        if (timeFilter != null && !timeFilter.equals("All")) {
+            switch (timeFilter) {
+                case "Quick":
+                    queryBuilder.append(" AND (preparationTime + cookingTime) < 30");
+                    break;
+                case "Medium":
+                    queryBuilder.append(" AND (preparationTime + cookingTime) BETWEEN 30 AND 60");
+                    break;
+                case "Long":
+                    queryBuilder.append(" AND (preparationTime + cookingTime) > 60");
+                    break;
+            }
+        }
+
+        try (PreparedStatement stmt = connection.prepareStatement(queryBuilder.toString())) {
+            // Set parameters
+            for (int i = 0; i < parameters.size(); i++) {
+                stmt.setObject(i + 1, parameters.get(i));
+            }
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
+        }
+    }
+
+
+    /**
      * Upvotes a meal post
      * 
      * @param userId The user ID who is upvoting
