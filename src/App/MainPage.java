@@ -410,7 +410,12 @@ public class MainPage {
         // Add hover effect
         viewRecipeButton.setOnMouseEntered(e -> viewRecipeButton.setStyle(DarkTheme.CSS_BUTTON + DarkTheme.CSS_BUTTON_HOVER));
         viewRecipeButton.setOnMouseExited(e -> viewRecipeButton.setStyle(DarkTheme.CSS_BUTTON));
-        
+
+        viewRecipeButton.setOnAction(e -> {
+            RecipeDetailPage detailPage = new RecipeDetailPage(databaseHelper, currentUser, post);
+            detailPage.show((Stage) viewRecipeButton.getScene().getWindow());
+        });
+
         buttonContainer.getChildren().add(viewRecipeButton);
 
         // Add delete button if the post belongs to the current user
