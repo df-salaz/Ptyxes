@@ -91,7 +91,29 @@ public class CreatePostPage {
         difficultyCombo.getItems().addAll("Easy", "Medium", "Hard");
         difficultyCombo.setValue("Medium");
         difficultyCombo.setStyle(DarkTheme.CSS_FIELD);
-        
+
+        // Dietary type selection
+        VBox dietaryTypeBox = new VBox(5);
+        Label dietaryLabel = new Label("Dietary Type:");
+        dietaryLabel.setStyle(DarkTheme.CSS_LABEL);
+
+        ToggleGroup dietaryGroup = new ToggleGroup();
+
+        RadioButton veganOption = new RadioButton("Vegan");
+        veganOption.setStyle(DarkTheme.CSS_LABEL);
+        veganOption.setToggleGroup(dietaryGroup);
+
+        RadioButton vegetarianOption = new RadioButton("Vegetarian");
+        vegetarianOption.setStyle(DarkTheme.CSS_LABEL);
+        vegetarianOption.setToggleGroup(dietaryGroup);
+
+        RadioButton noneOption = new RadioButton("None");
+        noneOption.setStyle(DarkTheme.CSS_LABEL);
+        noneOption.setToggleGroup(dietaryGroup);
+        noneOption.setSelected(true);
+
+        dietaryTypeBox.getChildren().addAll(dietaryLabel, veganOption, vegetarianOption, noneOption);
+
         // Ingredients section
         Text ingredientsHeader = new Text("Ingredients");
         ingredientsHeader.setFont(Font.font("System", FontWeight.BOLD, 16));
@@ -114,8 +136,7 @@ public class CreatePostPage {
         submitButton.setStyle(DarkTheme.CSS_BUTTON);
         
         buttonBar.getChildren().addAll(cancelButton, submitButton);
-        
-        // Add all components to main container
+
         mainContainer.getChildren().addAll(
             headerText,
             new Label("Title:"),
@@ -127,12 +148,13 @@ public class CreatePostPage {
             timeInputs,
             new Label("Difficulty:"),
             difficultyCombo,
+            dietaryTypeBox,
             ingredientsHeader,
             ingredientsContainer,
             addIngredientButton,
             buttonBar
         );
-        
+
         // Set up cancel action
         cancelButton.setOnAction(e -> {
             MainPage mainPage = new MainPage(databaseHelper, currentUser);
@@ -147,21 +169,27 @@ public class CreatePostPage {
                     showAlert(Alert.AlertType.ERROR, "Error", "Please enter a title");
                     return;
                 }
-                
+
+                // Get selected dietary type
+                RadioButton selectedDietaryType = (RadioButton) dietaryGroup.getSelectedToggle();
+                String dietaryType = selectedDietaryType.getText();
+
                 // Create the post
-                MealPost post = currentUser.createMealPost(
-                    databaseHelper,
-                    titleField.getText().trim(),
-                    descriptionArea.getText().trim(),
-                    instructionsArea.getText().trim(),
-                    prepTimeSpinner.getValue(),
-                    cookTimeSpinner.getValue(),
-                    servingsSpinner.getValue(),
-                    difficultyCombo.getValue(),
-                    getIngredientsList()
-                );
-                
-                if (post != null) {
+                MealPost post = new MealPost();
+                post.setUserId(currentUser.getId());
+                post.setTitle(titleField.getText().trim());
+                post.setDescription(descriptionArea.getText().trim());
+                post.setInstructions(instructionsArea.getText().trim());
+                post.setPreparationTime(prepTimeSpinner.getValue());
+                post.setCookingTime(cookTimeSpinner.getValue());
+                post.setServings(servingsSpinner.getValue());
+                post.setDifficulty(difficultyCombo.getValue());
+                post.setDietaryType(dietaryType);
+                post.setIngredients(getIngredientsList());
+
+                MealPost createdPost = databaseHelper.createMealPost(post);
+
+                if (createdPost != null) {
                     showAlert(Alert.AlertType.INFORMATION, "Success", "Post created successfully!");
                     MainPage mainPage = new MainPage(databaseHelper, currentUser);
                     mainPage.show(primaryStage);
@@ -170,7 +198,7 @@ public class CreatePostPage {
                 showAlert(Alert.AlertType.ERROR, "Error", "Failed to create post: " + ex.getMessage());
             }
         });
-        
+
         scrollPane.setContent(mainContainer);
         Scene scene = new Scene(scrollPane, 800, 700);
         DarkTheme.applyTheme(scene);

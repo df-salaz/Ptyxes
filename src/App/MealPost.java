@@ -13,6 +13,7 @@ import java.util.List;
  * instructions, preparation and cooking times, ingredients, and upvotes.
  */
 public class MealPost {
+    private String dietaryType; // "Vegan", "Vegetarian", or "None"
     private int id;
     private String title;
     private int userId;
@@ -28,16 +29,17 @@ public class MealPost {
     private LocalDateTime lastModified;
     private List<MealIngredient> ingredients;
     
-    // Constructor
     public MealPost() {
         this.ingredients = new ArrayList<>();
         this.upvotes = 0;
+        this.dietaryType = "None"; // Default value
     }
     
     // Full constructor
     public MealPost(int id, String title, int userId, String description, String instructions,
                    int preparationTime, int cookingTime, int servings, String difficulty,
-                   String imageUrl, int upvotes, LocalDateTime creationDate, LocalDateTime lastModified) {
+                   String imageUrl, int upvotes, LocalDateTime creationDate, LocalDateTime lastModified,
+                   String dietaryType) {
         this.id = id;
         this.title = title;
         this.userId = userId;
@@ -52,6 +54,7 @@ public class MealPost {
         this.creationDate = creationDate;
         this.lastModified = lastModified;
         this.ingredients = new ArrayList<>();
+        this.dietaryType = dietaryType != null ? dietaryType : "None";
     }
 
     public static MealPost fromResultSet(ResultSet rs) throws SQLException {
@@ -68,11 +71,20 @@ public class MealPost {
                 rs.getString("imageUrl"),
                 rs.getInt("upvotes"),
                 rs.getTimestamp("creationDate") != null ? rs.getTimestamp("creationDate").toLocalDateTime() : null,
-                rs.getTimestamp("lastModified") != null ? rs.getTimestamp("lastModified").toLocalDateTime() : null
+                rs.getTimestamp("lastModified") != null ? rs.getTimestamp("lastModified").toLocalDateTime() : null,
+                rs.getString("dietaryType")
         );
     }
 
     // Getters and Setters
+    public String getDietaryType() {
+        return dietaryType;
+    }
+    
+    public void setDietaryType(String dietaryType) {
+        this.dietaryType = dietaryType;
+    }
+    
     public int getId() {
         return id;
     }

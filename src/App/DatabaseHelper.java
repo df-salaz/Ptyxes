@@ -85,19 +85,20 @@ public class DatabaseHelper {
         statement.execute(userTable);
 
         // Meal posts table
-        String mealPostTable = "CREATE TABLE IF NOT EXISTS meal_posts (" 
+        String mealPostTable = "CREATE TABLE IF NOT EXISTS meal_posts ("
                 + "id INT AUTO_INCREMENT PRIMARY KEY, "
-                + "title VARCHAR(255), " 
-                + "userId INT, " 
-                + "description TEXT, " 
+                + "title VARCHAR(255), "
+                + "userId INT, "
+                + "description TEXT, "
                 + "instructions TEXT, "
-                + "preparationTime INT, " 
-                + "cookingTime INT, " 
+                + "preparationTime INT, "
+                + "cookingTime INT, "
                 + "servings INT, " 
                 + "difficulty VARCHAR(50), "
-                + "imageUrl VARCHAR(255), " 
+                + "dietaryType VARCHAR(50), "
+                + "imageUrl VARCHAR(255), "
                 + "creationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
-                + "lastModified TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " 
+                + "lastModified TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
                 + "upvotes INT DEFAULT 0, "
                 + "FOREIGN KEY (userId) REFERENCES users(id))";
         statement.execute(mealPostTable);
@@ -392,51 +393,42 @@ public class DatabaseHelper {
      * @return The created MealPost with ID set, or null if creation failed
      */
     public MealPost createMealPost(MealPost post) throws SQLException {
-        // Start a transaction to ensure data integrity
-        connection.setAutoCommit(false);
-        try {
-            // Insert the meal post
-            String query = "INSERT INTO meal_posts (title, userId, description, instructions, preparationTime, "
-                    + "cookingTime, servings, difficulty, imageUrl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            
-            try (PreparedStatement pstmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-                pstmt.setString(1, post.getTitle());
-                pstmt.setInt(2, post.getUserId());
-                pstmt.setString(3, post.getDescription());
-                pstmt.setString(4, post.getInstructions());
-                pstmt.setInt(5, post.getPreparationTime());
-                pstmt.setInt(6, post.getCookingTime());
-                pstmt.setInt(7, post.getServings());
-                pstmt.setString(8, post.getDifficulty());
-                pstmt.setString(9, post.getImageUrl());
-                
-                int affectedRows = pstmt.executeUpdate();
-                if (affectedRows > 0) {
-                    try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                        if (generatedKeys.next()) {
-                            int mealId = generatedKeys.getInt(1);
-                            post.setId(mealId);
-                            
-                            // Now add all ingredients
+        String sql = "INSERT INTO meal_posts (title, userId, description, instructions, " +
+                "preparationTime, cookingTime, servings, difficulty, dietaryType, " +
+                "imageUrl, upvotes, creationDate, lastModified) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, post.getTitle());
+            pstmt.setInt(2, post.getUserId());
+            pstmt.setString(3, post.getDescription());
+            pstmt.setString(4, post.getInstructions());
+            pstmt.setInt(5, post.getPreparationTime());
+            pstmt.setInt(6, post.getCookingTime());
+            pstmt.setInt(7, post.getServings());
+            pstmt.setString(8, post.getDifficulty());
+            pstmt.setString(9, post.getDietaryType());
+            pstmt.setString(10, post.getImageUrl());
+
+            int affectedRows = pstmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        post.setId(generatedKeys.getInt(1));
+
+                        // Save ingredients if any
+                        if (post.getIngredients() != null && !post.getIngredients().isEmpty()) {
                             for (MealIngredient ingredient : post.getIngredients()) {
-                                addIngredientToMeal(mealId, ingredient);
+                                addIngredientToMeal(post.getId(), ingredient);
                             }
-                            
-                            // Commit the transaction
-                            connection.commit();
-                            return getMealPostById(mealId);
                         }
+
+                        return post;
                     }
                 }
             }
-            // If we get here, something went wrong
-            connection.rollback();
             return null;
-        } catch (SQLException e) {
-            connection.rollback();
-            throw e;
-        } finally {
-            connection.setAutoCommit(true);
         }
     }
 
@@ -513,11 +505,12 @@ public class DatabaseHelper {
         connection.setAutoCommit(false);
         try {
             // Update the meal post
-            String query = "UPDATE meal_posts SET title = ?, description = ?, instructions = ?, "
-                    + "preparationTime = ?, cookingTime = ?, servings = ?, difficulty = ?, "
-                    + "imageUrl = ?, lastModified = CURRENT_TIMESTAMP WHERE id = ?";
-            
-            try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            String sql = "UPDATE meal_posts SET title = ?, description = ?, instructions = ?, " +
+                    "preparationTime = ?, cookingTime = ?, servings = ?, difficulty = ?, " +
+                    "dietaryType = ?, imageUrl = ?, lastModified = NOW() " +
+                    "WHERE id = ?";
+
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setString(1, post.getTitle());
                 pstmt.setString(2, post.getDescription());
                 pstmt.setString(3, post.getInstructions());
@@ -525,9 +518,10 @@ public class DatabaseHelper {
                 pstmt.setInt(5, post.getCookingTime());
                 pstmt.setInt(6, post.getServings());
                 pstmt.setString(7, post.getDifficulty());
-                pstmt.setString(8, post.getImageUrl());
-                pstmt.setInt(9, post.getId());
-                
+                pstmt.setString(8, post.getDietaryType());
+                pstmt.setString(9, post.getImageUrl());
+                pstmt.setInt(10, post.getId());
+
                 int affectedRows = pstmt.executeUpdate();
                 if (affectedRows > 0) {
                     // Clear existing ingredients
@@ -806,104 +800,128 @@ public class DatabaseHelper {
      * @param pageSize The number of meal posts per page.
      * @return A list of filtered and paginated MealPost objects matching the criteria.
      */
-    public List<MealPost> searchAndFilterMealPosts(String searchQuery, String difficulty, String timeFilter, int page, int pageSize) throws SQLException {
-        StringBuilder queryBuilder = new StringBuilder("SELECT * FROM meal_posts WHERE 1=1");
-        List<Object> parameters = new ArrayList<>();
+    public List<MealPost> searchAndFilterMealPosts(
+            String query, String difficulty, String timeFilter, String dietaryFilter,
+            int page, int pageSize) throws SQLException {
 
-        // Add search condition if search query is provided
-        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            queryBuilder.append(" AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ?)");
-            String searchPattern = "%" + searchQuery.toLowerCase() + "%";
-            parameters.add(searchPattern);
-            parameters.add(searchPattern);
+        String sql = "SELECT * FROM meal_posts WHERE 1=1";
+
+        if (query != null && !query.isEmpty()) {
+            sql += " AND (title LIKE ? OR description LIKE ?)";
         }
 
-        // Add difficulty filter
-        if (difficulty != null && !difficulty.equals("All")) {
-            queryBuilder.append(" AND difficulty = ?");
-            parameters.add(difficulty);
+        if (difficulty != null && !"All".equals(difficulty)) {
+            sql += " AND difficulty = ?";
         }
 
-        // Add time filter
-        if (timeFilter != null && !timeFilter.equals("All")) {
-            int totalTime;
+        if (timeFilter != null && !"All".equals(timeFilter)) {
             switch (timeFilter) {
                 case "Quick":
-                    queryBuilder.append(" AND (preparationTime + cookingTime) < 30");
+                    sql += " AND (preparationTime + cookingTime) < 30";
                     break;
                 case "Medium":
-                    queryBuilder.append(" AND (preparationTime + cookingTime) BETWEEN 30 AND 60");
+                    sql += " AND (preparationTime + cookingTime) BETWEEN 30 AND 60";
                     break;
                 case "Long":
-                    queryBuilder.append(" AND (preparationTime + cookingTime) > 60");
+                    sql += " AND (preparationTime + cookingTime) > 60";
                     break;
             }
         }
 
-        // Add pagination
-        queryBuilder.append(" ORDER BY creationDate DESC LIMIT ? OFFSET ?");
-        parameters.add(pageSize);
-        parameters.add(page * pageSize);
+        if (dietaryFilter != null && !"All".equals(dietaryFilter)) {
+            sql += " AND dietaryType = ?";
+        }
 
-        try (PreparedStatement stmt = connection.prepareStatement(queryBuilder.toString())) {
-            // Set parameters
-            for (int i = 0; i < parameters.size(); i++) {
-                stmt.setObject(i + 1, parameters.get(i));
+        sql += " ORDER BY creationDate DESC LIMIT ? OFFSET ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            int paramIndex = 1;
+
+            if (query != null && !query.isEmpty()) {
+                String likeQuery = "%" + query + "%";
+                pstmt.setString(paramIndex++, likeQuery);
+                pstmt.setString(paramIndex++, likeQuery);
             }
 
-            ResultSet rs = stmt.executeQuery();
-            List<MealPost> posts = new ArrayList<>();
-            while (rs.next()) {
-                posts.add(MealPost.fromResultSet(rs));
+            if (difficulty != null && !"All".equals(difficulty)) {
+                pstmt.setString(paramIndex++, difficulty);
             }
-            return posts;
+
+            if (dietaryFilter != null && !"All".equals(dietaryFilter)) {
+                pstmt.setString(paramIndex++, dietaryFilter);
+            }
+
+            pstmt.setInt(paramIndex++, pageSize);
+            pstmt.setInt(paramIndex, page * pageSize);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                List<MealPost> posts = new ArrayList<>();
+
+                while (rs.next()) {
+                    MealPost post = MealPost.fromResultSet(rs);
+                    post.setIngredients(getIngredientsForMeal(post.getId()));
+                    posts.add(post);
+                }
+
+                return posts;
+            }
         }
     }
 
-    public int getFilteredPostsCount(String searchQuery, String difficulty, String timeFilter) throws SQLException {
-        StringBuilder queryBuilder = new StringBuilder("SELECT COUNT(*) FROM meal_posts WHERE 1=1");
-        List<Object> parameters = new ArrayList<>();
+    public int getFilteredPostsCount(
+            String query, String difficulty, String timeFilter, String dietaryFilter) throws SQLException {
 
-        // Add search condition if a search query is provided
-        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            queryBuilder.append(" AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ?)");
-            String searchPattern = "%" + searchQuery.toLowerCase() + "%";
-            parameters.add(searchPattern);
-            parameters.add(searchPattern);
+        String sql = "SELECT COUNT(*) FROM meal_posts WHERE 1=1";
+
+        if (query != null && !query.isEmpty()) {
+            sql += " AND (title LIKE ? OR description LIKE ?)";
         }
 
-        // Add difficulty filter
-        if (difficulty != null && !difficulty.equals("All")) {
-            queryBuilder.append(" AND difficulty = ?");
-            parameters.add(difficulty);
+        if (difficulty != null && !"All".equals(difficulty)) {
+            sql += " AND difficulty = ?";
         }
 
-        // Add time filter
-        if (timeFilter != null && !timeFilter.equals("All")) {
+        if (timeFilter != null && !"All".equals(timeFilter)) {
             switch (timeFilter) {
                 case "Quick":
-                    queryBuilder.append(" AND (preparationTime + cookingTime) < 30");
+                    sql += " AND (preparationTime + cookingTime) < 30";
                     break;
                 case "Medium":
-                    queryBuilder.append(" AND (preparationTime + cookingTime) BETWEEN 30 AND 60");
+                    sql += " AND (preparationTime + cookingTime) BETWEEN 30 AND 60";
                     break;
                 case "Long":
-                    queryBuilder.append(" AND (preparationTime + cookingTime) > 60");
+                    sql += " AND (preparationTime + cookingTime) > 60";
                     break;
             }
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(queryBuilder.toString())) {
-            // Set parameters
-            for (int i = 0; i < parameters.size(); i++) {
-                stmt.setObject(i + 1, parameters.get(i));
+        if (dietaryFilter != null && !"All".equals(dietaryFilter)) {
+            sql += " AND dietaryType = ?";
+        }
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            int paramIndex = 1;
+
+            if (query != null && !query.isEmpty()) {
+                String likeQuery = "%" + query + "%";
+                pstmt.setString(paramIndex++, likeQuery);
+                pstmt.setString(paramIndex++, likeQuery);
             }
 
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            if (difficulty != null && !"All".equals(difficulty)) {
+                pstmt.setString(paramIndex++, difficulty);
             }
-            return 0;
+
+            if (dietaryFilter != null && !"All".equals(dietaryFilter)) {
+                pstmt.setString(paramIndex++, dietaryFilter);
+            }
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+                return 0;
+            }
         }
     }
 
