@@ -351,6 +351,10 @@ public class MainPage {
         description.setFill(Color.web(DarkTheme.TEXT_COLOR));
         description.setWrappingWidth(700);
         
+        // Button container for recipe and delete buttons
+        HBox buttonContainer = new HBox(10);
+        buttonContainer.setAlignment(Pos.CENTER_LEFT);
+        
         // Button to view full recipe
         Button viewRecipeButton = new Button("View Full Recipe");
         viewRecipeButton.setStyle(DarkTheme.CSS_BUTTON);
@@ -358,6 +362,50 @@ public class MainPage {
         // Add hover effect
         viewRecipeButton.setOnMouseEntered(e -> viewRecipeButton.setStyle(DarkTheme.CSS_BUTTON + DarkTheme.CSS_BUTTON_HOVER));
         viewRecipeButton.setOnMouseExited(e -> viewRecipeButton.setStyle(DarkTheme.CSS_BUTTON));
+        
+        buttonContainer.getChildren().add(viewRecipeButton);
+        
+        // Add delete button if the post belongs to the current user
+        if (post.getUserId() == currentUser.getId()) {
+            Button deleteButton = new Button("Delete Post");
+            deleteButton.setStyle(DarkTheme.CSS_BUTTON + "-fx-background-color: #a02020;");
+            
+            // Add hover effect for delete button
+            deleteButton.setOnMouseEntered(e -> deleteButton.setStyle(DarkTheme.CSS_BUTTON + "-fx-background-color: #c02020;"));
+            deleteButton.setOnMouseExited(e -> deleteButton.setStyle(DarkTheme.CSS_BUTTON + "-fx-background-color: #a02020;"));
+            
+            // Add click functionality to the delete button
+            deleteButton.setOnAction(e -> {
+                // Show confirmation dialog
+                Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmDialog.setTitle("Delete Post");
+                confirmDialog.setHeaderText("Are you sure you want to delete this post?");
+                confirmDialog.setContentText("This action cannot be undone.");
+                
+                // Apply dark theme to the dialog
+                DarkTheme.styleDialog(confirmDialog);
+                
+                // Process the result
+                confirmDialog.showAndWait().ifPresent(result -> {
+                    if (result == ButtonType.OK) {
+                        try {
+                            boolean success = post.delete(databaseHelper);
+                            if (success) {
+                                // Refresh the posts list
+                                loadMealPosts();
+                                showAlert(Alert.AlertType.INFORMATION, "Success", "Post deleted successfully.");
+                            } else {
+                                showAlert(Alert.AlertType.ERROR, "Error", "Failed to delete the post.");
+                            }
+                        } catch (SQLException ex) {
+                            showAlert(Alert.AlertType.ERROR, "Error", "Could not delete post: " + ex.getMessage());
+                        }
+                    }
+                });
+            });
+            
+            buttonContainer.getChildren().add(deleteButton);
+        }
         
         // Post footer with creation date and author
         HBox footer = new HBox();
@@ -389,7 +437,7 @@ public class MainPage {
         }
         
         // Add all components to the post card
-        postCard.getChildren().addAll(header, metadata, description, viewRecipeButton, footer);
+        postCard.getChildren().addAll(header, metadata, description, buttonContainer, footer);
         
         // Add click functionality to the upvote button
         upvoteButton.setOnAction(e -> {
