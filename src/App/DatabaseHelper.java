@@ -793,7 +793,7 @@ public class DatabaseHelper {
     /**
      * Searches and filters meal posts based on provided criteria such as search query, difficulty level, time filters, and pagination settings.
      *
-     * @param searchQuery The search text to filter meal posts by title or description (case-insensitive).
+     * @param query The search text to filter meal posts by title or description (case-insensitive).
      * @param difficulty The difficulty level to filter meal posts (e.g., "Easy", "Medium", "Hard"). Use "All" to ignore this filter.
      * @param timeFilter The time category for filtering based on total preparation and cooking time ("Quick", "Medium", "Long"). Use "All" to ignore this filter.
      * @param page The page number for paginated results (0-based).
@@ -828,8 +828,13 @@ public class DatabaseHelper {
             }
         }
 
+        // Vegan options are also vegetarian
         if (dietaryFilter != null && !"All".equals(dietaryFilter)) {
-            sql += " AND dietaryType = ?";
+            if ("Vegetarian".equals(dietaryFilter)) {
+                sql += " AND dietaryType = ? OR dietaryType = 'Vegan'";
+            } else {
+                sql += " AND dietaryType = ?";
+            }
         }
 
         sql += " ORDER BY creationDate DESC LIMIT ? OFFSET ?";
