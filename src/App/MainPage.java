@@ -378,13 +378,6 @@ public class MainPage {
         Label dietaryType = new Label(post.getDietaryType());
         dietaryType.setStyle(DarkTheme.CSS_LABEL);
 
-        // Add color coding for dietary types
-        if ("Vegan".equals(post.getDietaryType())) {
-            dietaryType.setTextFill(Color.web("#4CAF50")); // Green for vegan
-        } else if ("Vegetarian".equals(post.getDietaryType())) {
-            dietaryType.setTextFill(Color.web("#8BC34A")); // Light green for vegetarian
-        }
-
         metadata.getChildren().addAll(prepTime, cookTime, difficulty, servings, dietaryType);
 
         // Post description
