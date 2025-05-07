@@ -411,8 +411,8 @@ public class MainPage {
 
         buttonContainer.getChildren().add(viewRecipeButton);
 
-        // Add delete button if the post belongs to the current user
-        if (post.getUserId() == currentUser.getId()) {
+        // Add delete button if the post belongs to the current user or if the user is an administrator
+        if (post.getUserId() == currentUser.getId() || currentUser.getRole() == 1) {
             Button deleteButton = new Button("Delete Post");
             deleteButton.setStyle(DarkTheme.CSS_BUTTON + "-fx-background-color: #a02020;");
 

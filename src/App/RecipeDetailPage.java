@@ -268,7 +268,7 @@ public class RecipeDetailPage {
         commentText.setWrappingWidth(700);
         
         // Add delete option if comment belongs to current user
-        if (comment.getUserId() == currentUser.getId()) {
+        if (comment.getUserId() == currentUser.getId() || currentUser.getRole() == 1) {
             Button deleteButton = new Button("Delete");
             deleteButton.setStyle(DarkTheme.CSS_BUTTON + "-fx-background-color: #a02020;");
             
