@@ -781,6 +781,7 @@ public class DatabaseHelper {
         post.setDifficulty(rs.getString("difficulty"));
         post.setImageUrl(rs.getString("imageUrl"));
         post.setUpvotes(rs.getInt("upvotes"));
+        post.setDietaryType(rs.getString("dietaryType"));
         if (rs.getTimestamp("creationDate") != null) {
             post.setCreationDate(rs.getTimestamp("creationDate").toLocalDateTime());
         }
