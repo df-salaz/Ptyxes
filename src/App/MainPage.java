@@ -30,6 +30,7 @@ public class MainPage {
     private String currentDifficulty = "All";
     private String currentTimeFilter = "All";
     private String currentDietaryFilter = "All";
+    private String currentSortMode = "Date"; // Default sort by date
     private VBox postsContainer;
     private Text pageText;
     private Button prevButton;
@@ -103,6 +104,23 @@ public class MainPage {
         Button searchButton = new Button("Search");
         searchButton.setStyle(DarkTheme.CSS_BUTTON);
         
+        // Sort dropdown
+        Label sortLabel = new Label("Sort by:");
+        sortLabel.setStyle(DarkTheme.CSS_LABEL);
+        
+        ComboBox<String> sortComboBox = new ComboBox<>();
+        sortComboBox.getItems().addAll("Date", "Reputation", "Preparation Time", "Cooking Time");
+        sortComboBox.setValue(currentSortMode);
+        sortComboBox.setStyle(DarkTheme.CSS_FIELD);
+        
+        // Add sort functionality
+        sortComboBox.setOnAction(e -> {
+            currentSortMode = sortComboBox.getValue();
+            currentPage = 0;
+            loadMealPosts();
+            updatePaginationButtons();
+        });
+        
         // Search functionality
         searchButton.setOnAction(e -> {
             currentSearchQuery = searchField.getText().trim();
@@ -153,7 +171,7 @@ public class MainPage {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
         // Add all components to the top bar
-        topBar.getChildren().addAll(appTitle, searchField, searchButton, spacer, userSection);
+        topBar.getChildren().addAll(appTitle, searchField, searchButton, sortLabel, sortComboBox, spacer, userSection);
         
         return topBar;
     }
@@ -308,31 +326,6 @@ public class MainPage {
         sidebar.getChildren().addAll(filterTitle, difficultyFilter, timeFilter, dietaryFilter, userActions);
 
         return sidebar;
-    }
-    
-    private void loadMealPosts(VBox postsContainer) {
-        postsContainer.getChildren().clear();
-        
-        try {
-            List<MealPost> posts = databaseHelper.getAllMealPosts(currentPage, PAGE_SIZE);
-            
-            if (posts.isEmpty()) {
-                Text noPostsText = new Text("No meal posts found.");
-                noPostsText.setFill(Color.web(DarkTheme.TEXT_COLOR));
-                postsContainer.getChildren().add(noPostsText);
-                return;
-            }
-            
-            for (MealPost post : posts) {
-                VBox postCard = createPostCard(post);
-                postsContainer.getChildren().add(postCard);
-            }
-            
-        } catch (SQLException e) {
-            Text errorText = new Text("Error loading posts: " + e.getMessage());
-            errorText.setFill(Color.web(DarkTheme.ERROR_COLOR));
-            postsContainer.getChildren().add(errorText);
-        }
     }
 
     private VBox createPostCard(MealPost post) {
@@ -540,7 +533,7 @@ public class MainPage {
             if (currentPage > 0) {
                 currentPage--;
                 pageText.setText("Page " + (currentPage + 1));
-                loadMealPosts(postsContainer);
+                loadMealPosts();
                 updatePaginationButtons(); // Update buttons after page change
             }
         });
@@ -548,7 +541,7 @@ public class MainPage {
         nextButton.setOnAction(e -> {
             currentPage++;
             pageText.setText("Page " + (currentPage + 1));
-            loadMealPosts(postsContainer);
+            loadMealPosts();
             updatePaginationButtons(); // Update buttons after page change
         });
         
@@ -578,6 +571,7 @@ public class MainPage {
                 currentDifficulty,
                 currentTimeFilter,
                 currentDietaryFilter,
+                currentSortMode, // Pass the sort mode to the database helper
                 currentPage,
                 PAGE_SIZE
             );

@@ -802,75 +802,101 @@ public class DatabaseHelper {
      */
     public List<MealPost> searchAndFilterMealPosts(
             String query, String difficulty, String timeFilter, String dietaryFilter,
-            int page, int pageSize) throws SQLException {
+            String sortMode, int page, int pageSize) throws SQLException {
 
-        String sql = "SELECT * FROM meal_posts WHERE 1=1";
+        List<MealPost> results = new ArrayList<>();
 
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT p.*, u.reputation FROM meal_posts p ");
+        sql.append("LEFT JOIN users u ON p.userId = u.id ");
+        sql.append("WHERE 1=1 ");
+
+        // Add search condition if query is not empty
         if (query != null && !query.isEmpty()) {
-            sql += " AND (title LIKE ? OR description LIKE ?)";
+            sql.append("AND (LOWER(p.title) LIKE ? OR LOWER(p.description) LIKE ?) ");
         }
 
-        if (difficulty != null && !"All".equals(difficulty)) {
-            sql += " AND difficulty = ?";
+        // Add difficulty filter if not "All"
+        if (difficulty != null && !difficulty.equals("All")) {
+            sql.append("AND p.difficulty = ? ");
         }
 
-        if (timeFilter != null && !"All".equals(timeFilter)) {
+        // Add time filter
+        if (timeFilter != null && !timeFilter.equals("All")) {
             switch (timeFilter) {
-                case "Quick":
-                    sql += " AND (preparationTime + cookingTime) < 30";
-                    break;
-                case "Medium":
-                    sql += " AND (preparationTime + cookingTime) BETWEEN 30 AND 60";
-                    break;
-                case "Long":
-                    sql += " AND (preparationTime + cookingTime) > 60";
-                    break;
+                case "Quick" -> sql.append("AND (p.preparationTime + p.cookingTime) < 30 ");
+                case "Medium" -> sql.append("AND (p.preparationTime + p.cookingTime) BETWEEN 30 AND 60 ");
+                case "Long" -> sql.append("AND (p.preparationTime + p.cookingTime) > 60 ");
             }
         }
 
-        // Vegan options are also vegetarian
-        if (dietaryFilter != null && !"All".equals(dietaryFilter)) {
-            if ("Vegetarian".equals(dietaryFilter)) {
-                sql += " AND dietaryType = ? OR dietaryType = 'Vegan'";
+        if (dietaryFilter != null && !dietaryFilter.equals("All")) {
+            if (dietaryFilter.equals("Vegetarian")) {
+                sql.append("AND p.dietaryType LIKE ? OR p.dietaryType LIKE 'Vegan' ");
             } else {
-                sql += " AND dietaryType = ?";
+                sql.append("AND p.dietaryType LIKE ? ");
             }
         }
 
-        sql += " ORDER BY creationDate DESC LIMIT ? OFFSET ?";
+        // Add sorting
+        if (sortMode != null) {
+            switch (sortMode) {
+                case "Reputation":
+                    sql.append("ORDER BY u.reputation DESC ");
+                    break;
+                case "Preparation Time":
+                    sql.append("ORDER BY p.preparationTime ASC, p.creationDate DESC ");
+                    break;
+                case "Cooking Time":
+                    sql.append("ORDER BY p.cookingTime ASC, p.creationDate DESC ");
+                    break;
+                case "Date":
+                default:
+                    sql.append("ORDER BY p.creationDate DESC ");
+                    break;
+            }
+        } else {
+            // Default sort by creation date (newest first)
+            sql.append("ORDER BY p.creationDate DESC ");
+        }
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        // Add pagination
+        sql.append("LIMIT ? OFFSET ?");
+
+        try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             int paramIndex = 1;
 
+            // Set search parameters
             if (query != null && !query.isEmpty()) {
-                String likeQuery = "%" + query + "%";
-                pstmt.setString(paramIndex++, likeQuery);
-                pstmt.setString(paramIndex++, likeQuery);
+                String likeParam = "%" + query.toLowerCase() + "%";
+                statement.setString(paramIndex++, likeParam);
+                statement.setString(paramIndex++, likeParam);
             }
 
-            if (difficulty != null && !"All".equals(difficulty)) {
-                pstmt.setString(paramIndex++, difficulty);
+            // Set difficulty parameter
+            if (difficulty != null && !difficulty.equals("All")) {
+                statement.setString(paramIndex++, difficulty);
             }
 
-            if (dietaryFilter != null && !"All".equals(dietaryFilter)) {
-                pstmt.setString(paramIndex++, dietaryFilter);
+            // Set dietary filter parameter
+            if (dietaryFilter != null && !dietaryFilter.equals("All")) {
+                statement.setString(paramIndex++, dietaryFilter);
             }
 
-            pstmt.setInt(paramIndex++, pageSize);
-            pstmt.setInt(paramIndex, page * pageSize);
+            // Set pagination parameters
+            statement.setInt(paramIndex++, pageSize);
+            statement.setInt(paramIndex, page * pageSize);
 
-            try (ResultSet rs = pstmt.executeQuery()) {
-                List<MealPost> posts = new ArrayList<>();
+            ResultSet rs = statement.executeQuery();
 
-                while (rs.next()) {
-                    MealPost post = MealPost.fromResultSet(rs);
-                    post.setIngredients(getIngredientsForMeal(post.getId()));
-                    posts.add(post);
-                }
-
-                return posts;
+            while (rs.next()) {
+                MealPost post = extractMealPostFromResultSet(rs);
+                post.setIngredients(getIngredientsForMeal(post.getId()));
+                results.add(post);
             }
         }
+
+        return results;
     }
 
     public int getFilteredPostsCount(
