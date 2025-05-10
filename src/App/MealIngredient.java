@@ -23,7 +23,7 @@ public class MealIngredient {
         this.quantity = quantity;
         this.unit = unit;
     }
-    
+
     // Constructor without ID (for new ingredients)
     public MealIngredient(String name, String category, float quantity, String unit) {
         this.name = name;
@@ -31,7 +31,7 @@ public class MealIngredient {
         this.quantity = quantity;
         this.unit = unit;
     }
-    
+
     // Getters and Setters
     public int getId() {
         return id;
@@ -40,7 +40,7 @@ public class MealIngredient {
     public void setId(int id) {
         this.id = id;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -93,26 +93,8 @@ public class MealIngredient {
         }
         
         // Format based on whether it's a whole number or has decimals
-        String quantityStr;
-        if (quantity == (int) quantity) {
-            quantityStr = String.format("%.0f", quantity);
-        } else {
-            quantityStr = String.format("%.2f", quantity).replaceAll("0+$", "").replaceAll("\\.$", "");
-        }
-        
-        // Special handling for fractions
-        if (quantity == 0.25f) {
-            quantityStr = "¼";
-        } else if (quantity == 0.5f) {
-            quantityStr = "½";
-        } else if (quantity == 0.75f) {
-            quantityStr = "¾";
-        } else if (quantity == 0.33f || quantity == 0.333f) {
-            quantityStr = "⅓";
-        } else if (quantity == 0.67f || quantity == 0.666f) {
-            quantityStr = "⅔";
-        }
-        
+        String quantityStr = getQuantityStr();
+
         // Handle plural for units if necessary
         String unitStr = unit;
         if (quantity > 1 && 
@@ -125,7 +107,37 @@ public class MealIngredient {
         
         return quantityStr + " " + unitStr;
     }
-    
+
+    /**
+     * Generates a string representation of the quantity field, formatting it as either an integer or
+     * a decimal with up to two significant digits. Also converts specific quantities into their
+     * corresponding fractional representations (e.g., "0.25" to "¼").
+     *
+     * @return The formatted quantity as a string, or its fractional representation if applicable.
+     */
+    private String getQuantityStr() {
+        String quantityStr;
+        if (quantity == (int) quantity) {
+            quantityStr = String.format("%.0f", quantity);
+        } else {
+            quantityStr = String.format("%.2f", quantity).replaceAll("0+$", "").replaceAll("\\.$", "");
+        }
+
+        // Special handling for fractions
+        if (quantity == 0.25f) {
+            quantityStr = "¼";
+        } else if (quantity == 0.5f) {
+            quantityStr = "½";
+        } else if (quantity == 0.75f) {
+            quantityStr = "¾";
+        } else if (quantity == 0.33f || quantity == 0.333f) {
+            quantityStr = "⅓";
+        } else if (quantity == 0.67f || quantity == 0.666f) {
+            quantityStr = "⅔";
+        }
+        return quantityStr;
+    }
+
     @Override
     public String toString() {
         return getFormattedAmount() + " " + name;

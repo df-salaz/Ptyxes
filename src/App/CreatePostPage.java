@@ -237,8 +237,7 @@ public class CreatePostPage {
         List<MealIngredient> ingredients = new ArrayList<>();
         
         for (javafx.scene.Node node : ingredientsContainer.getChildren()) {
-            if (node instanceof HBox) {
-                HBox row = (HBox) node;
+            if (node instanceof HBox row) {
                 TextField nameField = (TextField) row.getChildren().get(0);
                 TextField quantityField = (TextField) row.getChildren().get(1);
                 TextField unitField = (TextField) row.getChildren().get(2);

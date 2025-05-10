@@ -70,7 +70,7 @@ public class MainPage {
         root.setCenter(contentArea);
         
         // Create pagination controls at the bottom
-        HBox paginationBar = createPaginationBar(postsContainer);
+        HBox paginationBar = createPaginationBar();
         root.setBottom(paginationBar);
         
         // Create the scene
@@ -83,6 +83,13 @@ public class MainPage {
         primaryStage.show();
     }
     
+    /**
+     * Creates and configures the top bar of the application interface, including
+     * title, search functionality, sorting options, and user profile section.
+     *
+     * @param primaryStage the primary stage of the application, used for window management
+     * @return an HBox representing the top bar of the application
+     */
     private HBox createTopBar(Stage primaryStage) {
         HBox topBar = new HBox();
         topBar.setAlignment(Pos.CENTER_LEFT);
@@ -176,6 +183,14 @@ public class MainPage {
         return topBar;
     }
     
+    /**
+     * Creates and configures the sidebar of the application interface, including filter options
+     * for difficulty, total time, dietary preferences, and user actions such as creating a new post
+     * or viewing owned posts.
+     *
+     * @param primaryStage the primary stage of the application, used for managing window transitions
+     * @return a VBox containing the sidebar layout with filters and action buttons
+     */
     private VBox createSidebar(Stage primaryStage) {
         VBox sidebar = new VBox(15);
         sidebar.setPadding(new Insets(20));
@@ -328,6 +343,14 @@ public class MainPage {
         return sidebar;
     }
 
+    /**
+     * Creates an "at-a-glance" card representation of a meal post as a VBox UI element.
+     * The card includes sections such as the title, metadata, description,
+     * action buttons, and footer information about the author and comments.
+     *
+     * @param post the MealPost object containing the data
+     * @return a VBox representing the complete layout of the card UI component
+     */
     private VBox createPostCard(MealPost post) {
         VBox postCard = new VBox(10);
         postCard.setStyle("-fx-background-color: " + DarkTheme.SECONDARY_COLOR +
@@ -405,7 +428,7 @@ public class MainPage {
         buttonContainer.getChildren().add(viewRecipeButton);
 
         // Add delete button if the post belongs to the current user or if the user is an administrator
-        if (post.getUserId() == currentUser.getId() || currentUser.getRole() == 1) {
+        if (post.getUserId() == currentUser.getId() || currentUser.isAdmin()) {
             Button deleteButton = new Button("Delete Post");
             deleteButton.setStyle(DarkTheme.CSS_BUTTON + "-fx-background-color: #a02020;");
 
@@ -495,7 +518,14 @@ public class MainPage {
         return postCard;
     }
 
-    private HBox createPaginationBar(VBox postsContainer) {
+    /**
+     * Creates and configures a pagination bar for navigating through pages of meal posts.
+     * The pagination bar includes "Previous" and "Next" buttons, as well as a text label
+     * to display the current page number.
+     *
+     * @return an HBox representing the pagination bar with navigation functionality.
+     */
+    private HBox createPaginationBar() {
         HBox paginationBar = new HBox(10);
         paginationBar.setAlignment(Pos.CENTER);
         paginationBar.setPadding(new Insets(15));
@@ -543,6 +573,13 @@ public class MainPage {
         return paginationBar;
     }
     
+    /**
+     * Displays an alert dialog with the specified type, title, and message.
+     *
+     * @param alertType the type of the alert (e.g., information, warning, error)
+     * @param title the title of the alert dialog
+     * @param message the content message displayed in the alert dialog
+     */
     private void showAlert(Alert.AlertType alertType, String title, String message) {
         Alert alert = new Alert(alertType);
         alert.setTitle(title);
@@ -588,6 +625,10 @@ public class MainPage {
         }
     }
 
+    /**
+     * Updates the state of the pagination buttons and page text based on the current page
+     * and the total number of posts available after applying filters.
+     */
     private void updatePaginationButtons() {
         try {
             int totalPosts = databaseHelper.getFilteredPostsCount(

@@ -13,7 +13,7 @@ public class Comment {
     private int mealId;
     private String content;
     private LocalDateTime creationDate;
-    private String username; // Username of the commenter (for display purposes)
+    private String username;
     
     // Constructor
     public Comment() {
@@ -86,7 +86,7 @@ public class Comment {
      */
     public String getTimeAgo() {
         if (creationDate == null) {
-            return "unknown time";
+            return "never"; // should never occur
         }
         
         LocalDateTime now = LocalDateTime.now();
@@ -114,7 +114,7 @@ public class Comment {
      */
     public String getFormattedDateTime() {
         if (creationDate == null) {
-            return "unknown time";
+            return "never";
         }
         return creationDate.format(DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a"));
     }
@@ -138,7 +138,7 @@ public class Comment {
     }
     
     /**
-     * Returns a string representation of this Comment object
+     * Returns a string representation of this Comment object for debugging purposes.
      * 
      * @return A string representation of this Comment
      */
@@ -176,6 +176,6 @@ public class Comment {
      */
     @Override
     public int hashCode() {
-        return id;
+        return id; // DatabaseHelper should ensure this is unique
     }
 }

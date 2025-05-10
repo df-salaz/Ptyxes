@@ -3,6 +3,8 @@ package App;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 
+import java.util.Objects;
+
 public class DarkTheme {
     public static final String BACKGROUND_COLOR = "#2D2D2D";
     public static final String SECONDARY_COLOR = "#3D3D3D";
@@ -21,7 +23,7 @@ public class DarkTheme {
     
     // Apply the dark theme to a scene
     public static void applyTheme(Scene scene) {
-        scene.getStylesheets().add(DarkTheme.class.getResource("/App/darktheme.css").toExternalForm());
+        scene.getStylesheets().add(Objects.requireNonNull(DarkTheme.class.getResource("/App/darktheme.css")).toExternalForm());
     }
     
     public static void styleDialog(Alert alert) {

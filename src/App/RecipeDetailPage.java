@@ -179,10 +179,10 @@ public class RecipeDetailPage {
                         commentInput.clear();
                         loadComments();
                     } else {
-                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to post comment.");
+                        showError("Failed to post comment.");
                     }
                 } catch (SQLException ex) {
-                    showAlert(Alert.AlertType.ERROR, "Error", "Could not post comment: " + ex.getMessage());
+                    showError("Could not post comment: " + ex.getMessage());
                 }
             }
         });
@@ -212,6 +212,9 @@ public class RecipeDetailPage {
         primaryStage.show();
     }
     
+    /**
+     * Loads and displays the comments for the current meal post.
+     */
     private void loadComments() {
         commentsContainer.getChildren().clear();
         
@@ -236,6 +239,16 @@ public class RecipeDetailPage {
         }
     }
     
+    /**
+     * Creates a visual representation of a given comment in the form of a VBox.
+     * The comment box displays the author of the comment, the time it was posted,
+     * and the content of the comment. If the comment belongs to the current user
+     * or the user has admin privileges, a delete button is also included.
+     *
+     * @param comment The Comment object representing the comment to be displayed.
+     * @return A VBox containing the styled elements representing the comment.
+     * @throws SQLException If there is an error retrieving the author of the comment.
+     */
     private VBox createCommentBox(Comment comment) throws SQLException {
         VBox commentBox = new VBox(5);
         commentBox.setStyle("-fx-background-color: " + DarkTheme.SECONDARY_COLOR + 
@@ -268,7 +281,7 @@ public class RecipeDetailPage {
         commentText.setWrappingWidth(700);
         
         // Add delete option if comment belongs to current user
-        if (comment.getUserId() == currentUser.getId() || currentUser.getRole() == 1) {
+        if (comment.getUserId() == currentUser.getId() || currentUser.isAdmin()) {
             Button deleteButton = new Button("Delete");
             deleteButton.setStyle(DarkTheme.CSS_BUTTON + "-fx-background-color: #a02020;");
             
@@ -278,10 +291,10 @@ public class RecipeDetailPage {
                     if (success) {
                         loadComments(); // Refresh comments after delete
                     } else {
-                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to delete comment.");
+                        showError("Failed to delete comment.");
                     }
                 } catch (SQLException ex) {
-                    showAlert(Alert.AlertType.ERROR, "Error", "Could not delete comment: " + ex.getMessage());
+                    showError("Could not delete comment: " + ex.getMessage());
                 }
             });
             
@@ -293,9 +306,9 @@ public class RecipeDetailPage {
         return commentBox;
     }
     
-    private void showAlert(Alert.AlertType alertType, String title, String message) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
         alert.setHeaderText(null);
         alert.setContentText(message);
         DarkTheme.styleDialog(alert);

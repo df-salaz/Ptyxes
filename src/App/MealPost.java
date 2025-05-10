@@ -57,25 +57,6 @@ public class MealPost {
         this.dietaryType = dietaryType != null ? dietaryType : "None";
     }
 
-    public static MealPost fromResultSet(ResultSet rs) throws SQLException {
-        return new MealPost(
-                rs.getInt("id"),
-                rs.getString("title"),
-                rs.getInt("userId"),
-                rs.getString("description"),
-                rs.getString("instructions"),
-                rs.getInt("preparationTime"),
-                rs.getInt("cookingTime"),
-                rs.getInt("servings"),
-                rs.getString("difficulty"),
-                rs.getString("imageUrl"),
-                rs.getInt("upvotes"),
-                rs.getTimestamp("creationDate") != null ? rs.getTimestamp("creationDate").toLocalDateTime() : null,
-                rs.getTimestamp("lastModified") != null ? rs.getTimestamp("lastModified").toLocalDateTime() : null,
-                rs.getString("dietaryType")
-        );
-    }
-
     // Getters and Setters
     public String getDietaryType() {
         return dietaryType;
@@ -207,15 +188,6 @@ public class MealPost {
             this.ingredients = new ArrayList<>();
         }
         this.ingredients.add(ingredient);
-    }
-    
-    /**
-     * Gets the total preparation and cooking time
-     * 
-     * @return Total time in minutes
-     */
-    public int getTotalTime() {
-        return preparationTime + cookingTime;
     }
     
     /**
