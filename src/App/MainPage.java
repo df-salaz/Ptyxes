@@ -327,15 +327,7 @@ public class MainPage {
         newPostButton.setOnMouseEntered(e -> newPostButton.setStyle(DarkTheme.CSS_BUTTON + DarkTheme.CSS_BUTTON_HOVER));
         newPostButton.setOnMouseExited(e -> newPostButton.setStyle(DarkTheme.CSS_BUTTON));
         
-        Button myPostsButton = new Button("My Posts");
-        myPostsButton.setStyle(DarkTheme.CSS_BUTTON);
-        myPostsButton.setMaxWidth(Double.MAX_VALUE);
-        
-        // Add hover effect
-        myPostsButton.setOnMouseEntered(e -> myPostsButton.setStyle(DarkTheme.CSS_BUTTON + DarkTheme.CSS_BUTTON_HOVER));
-        myPostsButton.setOnMouseExited(e -> myPostsButton.setStyle(DarkTheme.CSS_BUTTON));
-        
-        userActions.getChildren().addAll(newPostButton, myPostsButton);
+        userActions.getChildren().add(newPostButton);
         
         // Add all components to the sidebar
         sidebar.getChildren().addAll(filterTitle, difficultyFilter, timeFilter, dietaryFilter, userActions);
